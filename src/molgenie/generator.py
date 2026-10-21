@@ -61,7 +61,10 @@ def screen_pains_and_sa_score(smiles: str) -> MedicinalFilterResult:
             sa_score = 1.0 + (num_rings * 0.4) + (mw / 200.0) + (rotatable_bonds * 0.15)
             sa_score = min(10.0, max(1.0, sa_score))
     except Exception:
-        pass
+        # Fallback heuristic if RDKit is not loaded
+        for alert_name, smarts in PAINS_SMARTS:
+            if smarts in smiles or ("Quinone" in alert_name and smiles.count("=O") >= 2 and "C1" in smiles):
+                pains_found.append(alert_name)
 
     passed = len(pains_found) == 0 and sa_score < 6.0
     rec = "Viable lead candidate" if passed else "Flagged for synthetic difficulty or PAINS toxicophore"
